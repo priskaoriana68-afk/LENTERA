@@ -27,11 +27,23 @@ def simpan_ke_sheets(nama_sheet, data_baru_dict):
     if conn is not None:
         try:
             # Baca data lama dari tab tersebut
-            df_lama = conn.read(spreadsheet=URL_SHEET, worksheet=nama_sheet, ttl=0)
+            try:
+                df_lama = conn.read(spreadsheet=URL_SHEET, worksheet=nama_sheet, ttl=0)
+            except Exception:
+                df_lama = pd.DataFrame()
+            
             # Buat dataframe baru dari input
             df_baru = pd.DataFrame([data_baru_dict])
-            # Gabungkan data lama dan baru
-            df_total = pd.concat([df_lama, df_baru], ignore_index=True)
+            
+            # Jika data lama kosong atau hanya berisi kolom kosong, langsung pakai data baru
+            if df_lama.empty or len(df_lama.columns) == 0:
+                df_total = df_baru
+            else:
+                # Menyamakan kolom agar tidak terjadi bentrok struktur (penyebab Error 400)
+                df_baru = df_baru.reindex(columns=df_lama.columns, fill_value="")
+                # Gabungkan data lama dan baru
+                df_total = pd.concat([df_lama, df_baru], ignore_index=True)
+            
             # Tulis kembali ke Google Sheets
             conn.update(spreadsheet=URL_SHEET, worksheet=nama_sheet, data=df_total)
         except Exception as e:
