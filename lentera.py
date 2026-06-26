@@ -22,42 +22,6 @@ if 'username' not in st.session_state:
 if 'kelas' not in st.session_state:
     st.session_state.kelas = ""
 
-# --- FUNGSI SIMPAN KE GOOGLE SHEETS ---
-def simpan_ke_sheets(nama_sheet, data_baru_dict):
-    if conn is not None:
-        try:
-            # Baca data lama dari tab tersebut
-            try:
-                df_lama = conn.read(spreadsheet=URL_SHEET, worksheet=nama_sheet, ttl=0)
-            except Exception:
-                df_lama = pd.DataFrame()
-            
-            # Buat dataframe baru dari input
-            df_baru = pd.DataFrame([data_baru_dict])
-            
-            # Jika data lama kosong atau hanya berisi kolom kosong, langsung pakai data baru
-            if df_lama.empty or len(df_lama.columns) == 0:
-                df_total = df_baru
-            else:
-                # Menyamakan kolom agar tidak terjadi bentrok struktur (penyebab Error 400)
-                df_baru = df_baru.reindex(columns=df_lama.columns, fill_value="")
-                # Gabungkan data lama dan baru
-                df_total = pd.concat([df_lama, df_baru], ignore_index=True)
-            
-            # Tulis kembali ke Google Sheets
-            conn.update(spreadsheet=URL_SHEET, worksheet=nama_sheet, data=df_total)
-        except Exception as e:
-            st.error(f"Gagal menyimpan data ke awan: {e}")
-
-# --- FUNGSI BACA DARI GOOGLE SHEETS ---
-def baca_dari_sheets(nama_sheet):
-    if conn is not None:
-        try:
-            return conn.read(spreadsheet=URL_SHEET, worksheet=nama_sheet, ttl=0)
-        except Exception:
-            return pd.DataFrame()
-    return pd.DataFrame()
-
 # --- TAMPILAN HEADER ---
 st.title("🕯️ LENTERA")
 st.subheader("Layanan Terintegrasi untuk Resiliensi dan Kesehatan Mental Remaja")
